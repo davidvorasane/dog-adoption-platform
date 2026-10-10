@@ -3,6 +3,7 @@ require("dotenv").config();
 const express = require("express");
 const connectDB = require("./db");
 const authRoutes = require("./routes/authRoutes");
+const authenticate = require("./middlewares/authMiddleware");
 
 
 const app = express();
@@ -13,6 +14,13 @@ app.use("/api/auth", authRoutes);
 app.get("/", (req, res) => {
   res.json({
     message: "Dog Adoption Platform API",
+  });
+});
+
+app.get("/api/protected", authenticate, (req, res) => {
+  res.json({
+    message: "You are authenticated",
+    user: req.user,
   });
 });
 
