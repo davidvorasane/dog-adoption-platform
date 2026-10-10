@@ -3,6 +3,7 @@ require("dotenv").config();
 const express = require("express");
 const connectDB = require("./db");
 const authRoutes = require("./routes/authRoutes");
+const dogRoutes = require("./routes/dogRoutes");
 const authenticate = require("./middlewares/authMiddleware");
 
 
@@ -10,6 +11,7 @@ const app = express();
 
 app.use(express.json());
 app.use("/api/auth", authRoutes);
+app.use("/api/dogs", dogRoutes);
 
 app.get("/", (req, res) => {
   res.json({
