@@ -112,10 +112,30 @@ const deleteDog = async (req, res) => {
 };
 
 
+const getAdoptedDogs = async (req, res) => {
+  try {
+    const dogs = await Dog.find({
+      adoptedBy: { $ne: null },
+    })
+      .populate("adoptedBy", "username email");
+
+    return res.status(200).json({
+      dogs});
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
+
+
+
 
 module.exports = {
   createDog,
   getDogs,
   adoptDog,
   deleteDog,
+  getAdoptedDogs,
 };
