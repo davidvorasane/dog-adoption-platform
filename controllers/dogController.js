@@ -14,7 +14,6 @@ const createDog = async (req, res) => {
       name,
       breed,
       age,
-      description,
       owner: req.user.userId,
     });
 
@@ -117,7 +116,6 @@ const getAdoptedDogs = async (req, res) => {
     const dogs = await Dog.find({
       adoptedBy: { $ne: null },
     })
-      .populate("adoptedBy", "username email");
 
     return res.status(200).json({
       dogs});

@@ -1,0 +1,56 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dog Adoption Platform</title>
+</head>
+<body>
+  <h1>Dog Adoption Platform</h1>
+
+  <h2>Register</h2>
+  <form id="register-form">
+    <input name="username" placeholder="Username" required>
+    <input name="email" type="email" placeholder="Email" required>
+    <input name="password" type="password" placeholder="Password (min 8 characters)" required minlength="8">
+    <button type="submit">Register</button>
+  </form>
+
+  <p id="message" hidden></p>
+
+  <h2>Login</h2>
+  <form id="login-form">
+    <input name="email" type="email" placeholder="Email" required>
+    <input name="password" type="password" placeholder="Password" required>
+    <button type="submit">Login</button>
+  </form>
+
+  <p id="auth-status">Not logged in</p>
+  <button id="logout-button" type="button">Logout</button>
+
+  <hr>
+
+  <h2>Add a Dog</h2>
+  <form id="dog-form">
+    <input name="name" placeholder="Dog name" required>
+    <input name="breed" placeholder="Breed" required>
+    <input name="age" type="number" placeholder="Age" min="0" required>
+    <button type="submit">Add Dog</button>
+  </form>
+
+  <hr>
+
+  <h2>Available Dogs</h2>
+  <button id="load-dogs">Refresh Dogs</button>
+  <div id="dogs-list"></div>
+
+  <hr>
+
+  <h2>Adopted Dogs</h2>
+  <button id="load-adopted">View Adopted Dogs</button>
+  <div id="adopted-list"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
