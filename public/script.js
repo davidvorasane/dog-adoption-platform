@@ -1,4 +1,3 @@
-
 let token = localStorage.getItem("token");
 
 const message = document.getElementById("message");
@@ -11,121 +10,96 @@ function showMessage(text) {
 async function apiRequest(url, options = {}) {
   const headers = {
     "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...options.headers,
   };
-
-  const response = await fetch(url, { ...options, headers });
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  const response = await fetch(url, {
+    ...options,
+    headers: headers,
+  });
   const data = await response.json();
-
   if (!response.ok) {
     throw new Error(data.message || "Something went wrong");
   }
-
   return data;
 }
 
-// Register
-
 document.getElementById("register-form").addEventListener("submit", async (event) => {
-  event.preventDefault();
+    event.preventDefault();
+    const form = new FormData(event.target);
+    try {
+      await apiRequest("/api/auth/register", {
+        method: "POST",
+        body: JSON.stringify({
+          username: form.get("username"),
+          email: form.get("email"),
+          password: form.get("password"),
+        }),
+      });
+      event.target.reset();
+      message.textContent = "Registration successful!";
+      message.hidden = false;
+      message.style.cursor = "pointer";
+      message.onclick = () => {
+        message.hidden = true;
+      };
+    } catch (error) {
+      showMessage(error.message);
+    }
+  });
 
-  const form = new FormData(event.target);
-
-  try {
-    const data = await apiRequest("/api/auth/register", {
-      method: "POST",
-      body: JSON.stringify({
-        username: form.get("username"),
-        email: form.get("email"),
-        password: form.get("password"),
-      }),
-    });
-
-    event.target.reset();
-
-    const message = document.getElementById("message");
-    message.textContent = "Registration successful!";
-    message.hidden = false;
-    message.style.cursor = "pointer";
-
-    message.onclick = () => {
-      message.hidden = true;
-    };
-  } catch (error) {
-    showMessage(error.message);
-  }
-});
-
-
-// Login
 document.getElementById("login-form").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const form = new FormData(event.target);
+    event.preventDefault();
+    const form = new FormData(event.target);
+    try {
+      const data = await apiRequest("/api/auth/login", {
+        method: "POST",
+        body: JSON.stringify({
+          email: form.get("email"),
+          password: form.get("password"),
+        }),
+      });
+      token = data.token;
+      localStorage.setItem("token", token);
+      document.getElementById("auth-status").textContent = "Logged in";
+      event.target.reset();
+    } catch (error) {
+      showMessage(error.message);
+    }
+  });
 
-  try {
-    const data = await apiRequest("/api/auth/login", {
-      method: "POST",
-      body: JSON.stringify({
-        email: form.get("email"),
-        password: form.get("password"),
-      }),
-    });
-
-    token = data.token;
-    localStorage.setItem("token", token);
-    document.getElementById("auth-status").textContent = "Logged in";
-    showMessage("Login successful!");
-    event.target.reset();
-  } catch (error) {
-    showMessage(error.message);
-  }
-});
-
-
-
-// Add a dog
 document.getElementById("dog-form").addEventListener("submit", async (event) => {
-  event.preventDefault();
-
-  if (!token) {
-    alert("Must be logged in");
-    return;
-  }
-
-  const form = new FormData(event.target);
-
-  try {
-    await apiRequest("/api/dogs", {
-      method: "POST",
-      body: JSON.stringify({
-        name: form.get("name"),
-        breed: form.get("breed"),
-        age: Number(form.get("age")),
-      }),
-    });
-
-    showMessage("Dog added successfully!");
-    event.target.reset();
-    loadDogs();
-  } catch (error) {
-    showMessage(error.message);
-  }
-});
-
-// Load available dogs
+    event.preventDefault();
+    if (!token) {
+      alert("Must be logged in");
+      return;
+    }
+    const form = new FormData(event.target);
+    try {
+      await apiRequest("/api/dogs", {
+        method: "POST",
+        body: JSON.stringify({
+          name: form.get("name"),
+          breed: form.get("breed"),
+          age: Number(form.get("age")),
+        }),
+      });
+      alert("Dog added successfully!");
+      event.target.reset();
+      await loadDogs();
+    } catch (error) {
+      showMessage(error.message);
+    }
+  });
 
 async function loadDogs() {
   try {
     const data = await apiRequest("/api/dogs");
     const list = document.getElementById("dogs-list");
     list.replaceChildren();
-
     const dogs = data.dogs || [];
-
-    // Only show dogs that have not been adopted
     const availableDogs = dogs.filter((dog) => !dog.adoptedBy);
-
     if (availableDogs.length === 0) {
       list.textContent = "No available dogs found.";
       return;
@@ -133,7 +107,6 @@ async function loadDogs() {
 
     availableDogs.forEach((dog) => {
       const item = document.createElement("div");
-
       const title = document.createElement("h3");
       title.textContent = `${dog.name} - ${dog.breed}`;
       item.appendChild(title);
@@ -142,47 +115,37 @@ async function loadDogs() {
       details.textContent = `Age: ${dog.age}. ${dog.description || ""}`;
       item.appendChild(details);
 
-      // Adopt button
       const adoptButton = document.createElement("button");
       adoptButton.textContent = "Adopt";
-
       adoptButton.addEventListener("click", async () => {
         if (!token) {
           alert("Must be logged in");
           return;
         }
-
         try {
           const result = await apiRequest(
             `/api/dogs/${dog._id}/adopt`,
             { method: "POST" }
           );
-
-          alert(result.message || `${dog.name} adopted successfully!`);
-
-          await loadDogs();
-          await loadAdoptedDogs();
+        alert(result.message || `${dog.name} adopted successfully!`);
+        await loadDogs();
+        await loadAdoptedDogs();
         } catch (error) {
           alert(error.message);
         }
       });
-
       item.appendChild(adoptButton);
 
-      // Remove button
       const deleteButton = document.createElement("button");
       deleteButton.textContent = "Remove";
-
       deleteButton.addEventListener("click", async () => {
         if (!confirm(`Are you sure you want to remove ${dog.name}?`)) {
           return;
         }
-
         try {
           await apiRequest(`/api/dogs/${dog._id}`, {
             method: "DELETE",
           });
-
           alert(`${dog.name} removed successfully!`);
           await loadDogs();
         } catch (error) {
@@ -198,23 +161,17 @@ async function loadDogs() {
   }
 }
 
-
-// Load adopted dogs
-
 async function loadAdoptedDogs() {
   const list = document.getElementById("adopted-list");
 
   try {
     const data = await apiRequest("/api/dogs/adopted");
     const dogs = data.dogs || [];
-
     list.replaceChildren();
-
     if (dogs.length === 0) {
       list.textContent = "No adopted dogs found.";
       return;
     }
-
     dogs.forEach((dog) => {
       const item = document.createElement("p");
       item.textContent = `${dog.name} - ${dog.breed} (Adopted)`;
@@ -226,24 +183,18 @@ async function loadAdoptedDogs() {
   }
 }
 
-
 document.getElementById("load-dogs").addEventListener("click", loadDogs);
 document.getElementById("load-adopted").addEventListener("click", loadAdoptedDogs);
-
-// Initial page state
-document.getElementById("auth-status").textContent =
-  token ? "Logged in (saved token)" : "Not logged in";
+document.getElementById("auth-status").textContent = token
+  ? "Logged in (saved token)"
+  : "Not logged in";
 
 document.getElementById("logout-button").addEventListener("click", () => {
-  // Remove the saved login token
   localStorage.removeItem("token");
   token = null;
 
-  // Update the login status
-  document.getElementById("auth-status").textContent = "Not logged in";
-
-  // Show confirmation
-  alert("You have logged out successfully.");
+document.getElementById("auth-status").textContent = "Not logged in";
+alert("You have logged out successfully.");
 });
 
 loadDogs();

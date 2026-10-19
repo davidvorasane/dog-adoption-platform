@@ -1,3 +1,4 @@
+
 const Dog = require("../models/Dog");
 
 const createDog = async (req, res) => {
@@ -46,13 +47,14 @@ const getDogs = async (req, res) => {
   }
 };
 
-
 const adoptDog = async (req, res) => {
   try {
     const dog = await Dog.findById(req.params.id);
 
     if (!dog) {
-      return res.status(404).json({ message: "Dog not found" });
+      return res.status(404).json({
+        message: "Dog not found",
+      });
     }
 
     if (dog.adoptedBy) {
@@ -68,18 +70,22 @@ const adoptDog = async (req, res) => {
 
     return res.status(200).json({
       message: "Dog adopted successfully",
-      dog: dog,
+      dog,
     });
   } catch (error) {
     if (error.name === "CastError") {
-      return res.status(400).json({ message: "Invalid dog ID" });
+      return res.status(400).json({
+        message: "Invalid dog ID",
+      });
     }
 
     console.error(error);
-    return res.status(500).json({ message: "Server error" });
+
+    return res.status(500).json({
+      message: "Server error",
+    });
   }
 };
-
 
 const deleteDog = async (req, res) => {
   try {
@@ -104,31 +110,30 @@ const deleteDog = async (req, res) => {
     }
 
     console.error(error);
+
     return res.status(500).json({
       message: "Server error",
     });
   }
 };
-
 
 const getAdoptedDogs = async (req, res) => {
   try {
     const dogs = await Dog.find({
       adoptedBy: { $ne: null },
-    })
+    });
 
     return res.status(200).json({
-      dogs});
+      dogs,
+    });
   } catch (error) {
     console.error(error);
+
     return res.status(500).json({
       message: "Server error",
     });
   }
 };
-
-
-
 
 module.exports = {
   createDog,
