@@ -1,10 +1,16 @@
 let token = localStorage.getItem("token");
 
 const message = document.getElementById("message");
-
 function showMessage(text) {
   message.textContent = text;
   message.hidden = false;
+}
+
+function updateLoginUI() {
+  const protectedContent = document.getElementById("protected-content");
+  const authStatus = document.getElementById("auth-status");
+  protectedContent.hidden = !token;
+  authStatus.textContent = token ? "Logged in" : "Not logged in";
 }
 
 async function apiRequest(url, options = {}) {
@@ -62,8 +68,9 @@ document.getElementById("login-form").addEventListener("submit", async (event) =
       });
       token = data.token;
       localStorage.setItem("token", token);
-      document.getElementById("auth-status").textContent = "Logged in";
+      updateLoginUI();
       event.target.reset();
+      await loadDogs()
     } catch (error) {
       showMessage(error.message);
     }
@@ -185,16 +192,17 @@ async function loadAdoptedDogs() {
 
 document.getElementById("load-dogs").addEventListener("click", loadDogs);
 document.getElementById("load-adopted").addEventListener("click", loadAdoptedDogs);
-document.getElementById("auth-status").textContent = token
-  ? "Logged in (saved token)"
-  : "Not logged in";
 
 document.getElementById("logout-button").addEventListener("click", () => {
   localStorage.removeItem("token");
   token = null;
-
-document.getElementById("auth-status").textContent = "Not logged in";
-alert("You have logged out successfully.");
+  updateLoginUI();
+  document.getElementById("dogs-list").replaceChildren();
+  document.getElementById("adopted-list").replaceChildren();
+  alert("You have logged out successfully.");
 });
 
-loadDogs();
+updateLoginUI();
+if (token) {
+  loadDogs();
+}
